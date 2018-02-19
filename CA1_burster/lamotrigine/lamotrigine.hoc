@@ -1,0 +1,221 @@
+load_file("nrngui.hoc")
+cvode.active(1)
+
+dist=12
+
+Rm = 28000
+RmDend = Rm/2
+RmSoma = Rm
+RmAx = Rm
+
+Cm    = 1
+CmSoma= Cm
+CmAx  = Cm
+CmDend = Cm*2
+
+RaAll= 150
+RaSoma=150  
+RaAx = 50
+
+Vrest = -65
+dt = 0.2
+gna =  .032
+AXONM = 2
+gkdr = 0.003
+celsius = 34.0  
+KMULT =  0.008
+KMULTP = 0.008
+sh=0
+freq=20
+ghd=0.0006
+
+tstop=500
+
+objref nc, np,g, b, rsyn, s, apc, stim, psyn
+
+xopen("n160_mod.nrn")             // geometry file
+
+access soma[5]
+distance()
+
+apc = new APCount(0.5)
+apc.thresh=-20
+
+apical[0] {
+psyn = new Exp2Syn(0.5)
+psyn.e=0
+psyn.tau1 = 2
+psyn.tau2 = 20
+}
+
+apical[dist] {
+tmp=0.5
+s = new NetStimm(tmp)
+s.interval=2500
+s.number = 1.e9
+s.start=0
+s.noise=1
+s.interval=1000/freq
+rsyn = new Exp2Syn(tmp)
+rsyn.e=0
+rsyn.tau1 = 2
+rsyn.tau2 = 20
+}
+
+nc = new NetCon(s,rsyn,0,0,0)
+np = new NetCon(s,psyn,0,0,0)
+
+b = new VBox()
+b.intercept(1)
+g = new Graph()
+g.size(0,tstop,-70,30)
+g.exec_menu("Keep Lines")
+g.addvar("soma[5].v(0.5)",2,0, 2*tstop,0,2)
+xpanel("",1)
+xbutton("distal ", "rund()")
+xbutton("proximal ", "runp()")
+xpanel()
+b.intercept(0)
+b.map()
+
+proc init() {
+axon[1] {
+                insert nax gbar_nax=gna * AXONM
+                insert kdr gkdrbar_kdr=gkdr
+                insert pas e_pas=Vrest g_pas = 1/RmAx Ra=RaAx cm=CmAx
+                insert kap gkabar_kap = KMULTP*0.2
+}
+
+axon[0] {   
+                insert nax  gbar_nax=gna * AXONM
+                insert kdr  gkdrbar_kdr=gkdr 
+                insert pas e_pas=Vrest g_pas = 1/RmAx Ra=RaAx cm=CmAx
+                insert kap gkabar_kap = KMULTP*0.2
+}
+
+for i=0,NumSoma-1 soma[i] {   
+		insert hd ghdbar_hd=ghd
+			vhalfl_hd=-82+sh
+                insert na3  gbar_na3=gna     
+			ar2_na3=1
+                insert kdr gkdrbar_kdr=gkdr
+                insert kap gkabar_kap = KMULTP
+                insert pas e_pas=Vrest g_pas = 1/RmSoma Ra=RaSoma cm=CmSoma
+}
+
+for i=0,NumBasal-1 basal[i] {
+                insert na3    gbar_na3=gna   
+			ar2_na3=1
+                insert kdr gkdrbar_kdr=gkdr 
+                insert kap gkabar_kap=KMULTP
+                insert pas e_pas=Vrest g_pas = 1/RmDend Ra=RaAll cm=CmDend
+}
+                
+for i=0,NumApical-1 apical[i] {
+              insert pas e_pas=Vrest g_pas = 1/RmDend Ra=RaAll  cm=CmDend
+		if (diam>0.5 && distance(0.5)<500) {
+		insert hd ghdbar_hd=ghd
+                insert na3 
+		ar2_na3=0.8
+		gbar_na3=gna
+                insert kdr 
+		gkdrbar_kdr=gkdr
+		insert kap
+		insert kad
+		gkabar_kap=0
+		gkabar_kad=0
+
+              for (x){ xdist = distance(x)
+                if (xdist>500) {xdist=500}
+                ghdbar_hd(x) = ghd*(1+1.5*xdist/100)
+                if (xdist > 100){
+			vhalfl_hd=-90+sh
+                        gkabar_kad(x) = KMULT*(1+xdist/100)
+                } else {
+			vhalfl_hd=-82+sh
+                        gkabar_kap(x) = KMULTP*(1+xdist/100)
+                	}
+              				}
+							}
+				}
+
+	t=0
+        forall {
+        v=Vrest
+        if (ismembrane("nax") || ismembrane("na3")) {ena=55}
+        if (ismembrane("kdr") || ismembrane("kap") || ismembrane("kad")) {ek=-90}
+        if (ismembrane("hd") ) {ehd_hd=-30}
+	}
+	finitialize(v)
+        fcurrent()
+
+        forall {
+	for (x) {
+	if (ismembrane("na3")||ismembrane("nax")){e_pas(x)=v(x)+(ina(x)+ik(x))/g_pas(x)
+	if (ismembrane("hd")) {e_pas(x)=e_pas(x)+i_hd(x)/g_pas(x)}
+		} else {
+	e_pas(x)=v(x)
+			}
+		}
+	}
+	cvode.re_init()
+	cvode.event(tstop)
+	access soma[5]
+	g.begin()
+	g.plot(t)
+}
+
+proc step() {
+
+	fadvance()
+g.plot(t)
+g.flush()
+doNotify()
+}
+
+proc run() {
+	init()
+	while(t<tstop) { step()}
+}
+
+
+proc rund() {local sim,freq
+	g.erase_all()
+	g.xaxis(1)
+	nc.weight=20e-3
+	np.weight=0
+	g.label(0.2,0.1, "distal input")
+	sh=0
+	s.seed(1577)
+	print " "
+	g.addvar("soma[5].v(0.5)",1,0, 2*tstop,0,2)
+	run()
+	print "distal, control ",apc.n, " spikes"
+	sh=10
+	s.seed(1577)
+	g.addvar("soma[5].v(0.5)",2,0, 2*tstop,0,2)
+	run()
+	print "distal, lamotrigine ",apc.n, " spikes"
+}
+
+proc runp() {local sim,freq
+	g.erase_all()
+	g.xaxis(1)
+	nc.weight=0
+	np.weight=8e-3
+	g.label(0.2,0.1, "proximal input")
+	sh=0
+	s.seed(1577)
+	print " "
+	g.addvar("soma[5].v(0.5)",1,0, 2*tstop,0,2)
+	run()
+	print "proximal, control ",apc.n, " spikes"
+	sh=10
+	s.seed(1577)
+	g.addvar("soma[5].v(0.5)",2,0, 2*tstop,0,2)
+	run()
+	print "proximal, lamotrigine ",apc.n, " spikes"
+}
+
+
+
