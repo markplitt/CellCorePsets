@@ -47,11 +47,15 @@ extern double hoc_Exp(double);
 #define dt nrn_threads->_dt
 #define ghdbar _p[0]
 #define vhalfl _p[1]
-#define i _p[2]
-#define l _p[3]
-#define Dl _p[4]
-#define ghd _p[5]
-#define _g _p[6]
+#define vhalft _p[2]
+#define a0t _p[3]
+#define zetal _p[4]
+#define zetat _p[5]
+#define i _p[6]
+#define l _p[7]
+#define Dl _p[8]
+#define ghd _p[9]
+#define _g _p[10]
  
 #if MAC
 #if !defined(v)
@@ -106,8 +110,6 @@ extern Memb_func* memb_func;
  extern double alpl( double );
  extern double bett( double );
  /* declare global and static user variables */
-#define a0t a0t_hd
- double a0t = 0.011;
 #define ehd ehd_hd
  double ehd = 0;
 #define gmt gmt_hd
@@ -120,25 +122,19 @@ extern Memb_func* memb_func;
  double q10 = 4.5;
 #define taul taul_hd
  double taul = 0;
-#define vhalft vhalft_hd
- double vhalft = -75;
-#define zetat zetat_hd
- double zetat = 2.2;
-#define zetal zetal_hd
- double zetal = 4;
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
  0,0,0
 };
  static HocParmUnits _hoc_parm_units[] = {
  "ehd_hd", "mV",
+ "gmt_hd", "1",
+ "ghdbar_hd", "mho/cm2",
+ "vhalfl_hd", "mV",
  "vhalft_hd", "mV",
  "a0t_hd", "/ms",
  "zetal_hd", "1",
  "zetat_hd", "1",
- "gmt_hd", "1",
- "ghdbar_hd", "mho/cm2",
- "vhalfl_hd", "mV",
  "i_hd", "mA/cm2",
  0,0
 };
@@ -148,10 +144,6 @@ extern Memb_func* memb_func;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
  "ehd_hd", &ehd_hd,
- "vhalft_hd", &vhalft_hd,
- "a0t_hd", &a0t_hd,
- "zetal_hd", &zetal_hd,
- "zetat_hd", &zetat_hd,
  "gmt_hd", &gmt_hd,
  "q10_hd", &q10_hd,
  "qtl_hd", &qtl_hd,
@@ -182,6 +174,10 @@ static void _ode_matsol(_NrnThread*, _Memb_list*, int);
 "hd",
  "ghdbar_hd",
  "vhalfl_hd",
+ "vhalft_hd",
+ "a0t_hd",
+ "zetal_hd",
+ "zetat_hd",
  0,
  "i_hd",
  0,
@@ -194,12 +190,16 @@ extern Prop* need_memb(Symbol*);
 static void nrn_alloc(Prop* _prop) {
 	Prop *prop_ion;
 	double *_p; Datum *_ppvar;
- 	_p = nrn_prop_data_alloc(_mechtype, 7, _prop);
+ 	_p = nrn_prop_data_alloc(_mechtype, 11, _prop);
  	/*initialize range parameters*/
  	ghdbar = 0.0001;
  	vhalfl = -90;
+ 	vhalft = -75;
+ 	a0t = 0.011;
+ 	zetal = 4;
+ 	zetat = 2.2;
  	_prop->param = _p;
- 	_prop->param_size = 7;
+ 	_prop->param_size = 11;
  	_ppvar = nrn_prop_datum_alloc(_mechtype, 1, _prop);
  	_prop->dparam = _ppvar;
  	/*connect ionic variables to this model*/
@@ -223,12 +223,12 @@ extern void _cvode_abstol( Symbol**, double*, int);
  	register_mech(_mechanism, nrn_alloc,nrn_cur, nrn_jacob, nrn_state, nrn_init, hoc_nrnpointerindex, 0);
  _mechtype = nrn_get_mechtype(_mechanism[1]);
      _nrn_setdata_reg(_mechtype, _setdata);
-  hoc_register_prop_size(_mechtype, 7, 1);
+  hoc_register_prop_size(_mechtype, 11, 1);
   hoc_register_dparam_semantics(_mechtype, 0, "cvodeieq");
  	hoc_register_cvode(_mechtype, _ode_count, _ode_map, _ode_spec, _ode_matsol);
  	hoc_register_tolerance(_mechtype, _hoc_state_tol, &_atollist);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, hoc_intfunc);
- 	ivoc_help("help ?1 hd /Users/markplitt/repos/CellCorePSets/CA1_burster/x86_64/h.mod\n");
+ 	ivoc_help("help ?1 hd /Users/markplitt/repos/CellCorePSets/x86_64/h.mod\n");
  hoc_register_limits(_mechtype, _hoc_parm_limits);
  hoc_register_units(_mechtype, _hoc_parm_units);
  }

@@ -22,15 +22,15 @@ extern int _method3;
 extern double hoc_Exp(double);
 #endif
  
-#define nrn_init _nrn_init__kdr
-#define _nrn_initial _nrn_initial__kdr
-#define nrn_cur _nrn_cur__kdr
-#define _nrn_current _nrn_current__kdr
-#define nrn_jacob _nrn_jacob__kdr
-#define nrn_state _nrn_state__kdr
-#define _net_receive _net_receive__kdr 
-#define rates rates__kdr 
-#define states states__kdr 
+#define nrn_init _nrn_init__nap
+#define _nrn_initial _nrn_initial__nap
+#define nrn_cur _nrn_cur__nap
+#define _nrn_current _nrn_current__nap
+#define nrn_jacob _nrn_jacob__nap
+#define nrn_state _nrn_state__nap
+#define _net_receive _net_receive__nap 
+#define states states__nap 
+#define trates trates__nap 
  
 #define _threadargscomma_ /**/
 #define _threadargsprotocomma_ /**/
@@ -45,19 +45,24 @@ extern double hoc_Exp(double);
  
 #define t nrn_threads->_t
 #define dt nrn_threads->_dt
-#define gkdrbar _p[0]
-#define vhalfn _p[1]
-#define a0n _p[2]
-#define zetan _p[3]
-#define gkdr _p[4]
-#define n _p[5]
-#define ek _p[6]
-#define Dn _p[7]
-#define ik _p[8]
-#define _g _p[9]
-#define _ion_ek	*_ppvar[0]._pval
-#define _ion_ik	*_ppvar[1]._pval
-#define _ion_dikdv	*_ppvar[2]._pval
+#define gbar _p[0]
+#define tha _p[1]
+#define qa _p[2]
+#define thi1 _p[3]
+#define thi2 _p[4]
+#define qd _p[5]
+#define qg _p[6]
+#define m _p[7]
+#define h _p[8]
+#define ena _p[9]
+#define ina _p[10]
+#define thegna _p[11]
+#define Dm _p[12]
+#define Dh _p[13]
+#define _g _p[14]
+#define _ion_ena	*_ppvar[0]._pval
+#define _ion_ina	*_ppvar[1]._pval
+#define _ion_dinadv	*_ppvar[2]._pval
  
 #if MAC
 #if !defined(v)
@@ -75,9 +80,8 @@ extern "C" {
  /* external NEURON variables */
  extern double celsius;
  /* declaration of user functions */
- static void _hoc_alpn(void);
- static void _hoc_betn(void);
- static void _hoc_rates(void);
+ static void _hoc_trap0(void);
+ static void _hoc_trates(void);
  static int _mechtype;
 extern void _nrn_cacheloop_reg(int, int);
 extern void hoc_register_prop_size(int, int, int);
@@ -97,50 +101,85 @@ extern Memb_func* memb_func;
 }
  /* connect user functions to hoc names */
  static VoidFunc hoc_intfunc[] = {
- "setdata_kdr", _hoc_setdata,
- "alpn_kdr", _hoc_alpn,
- "betn_kdr", _hoc_betn,
- "rates_kdr", _hoc_rates,
+ "setdata_nap", _hoc_setdata,
+ "trap0_nap", _hoc_trap0,
+ "trates_nap", _hoc_trates,
  0, 0
 };
-#define alpn alpn_kdr
-#define betn betn_kdr
- extern double alpn( double );
- extern double betn( double );
+#define trap0 trap0_nap
+ extern double trap0( double , double , double , double );
  /* declare global and static user variables */
-#define gmn gmn_kdr
- double gmn = 0.7;
-#define ninf ninf_kdr
- double ninf = 0;
-#define nmax nmax_kdr
- double nmax = 2;
-#define q10 q10_kdr
- double q10 = 1;
-#define taun taun_kdr
- double taun = 0;
+#define Rd Rd_nap
+ double Rd = 0.03;
+#define Rg Rg_nap
+ double Rg = 0.01;
+#define Rb Rb_nap
+ double Rb = 0.124;
+#define Ra Ra_nap
+ double Ra = 0.4;
+#define hmin hmin_nap
+ double hmin = 0.5;
+#define htau htau_nap
+ double htau = 0;
+#define hinf hinf_nap
+ double hinf = 0;
+#define mmin mmin_nap
+ double mmin = 0.02;
+#define mtau mtau_nap
+ double mtau = 0;
+#define minf minf_nap
+ double minf = 0;
+#define q10 q10_nap
+ double q10 = 2;
+#define qinf qinf_nap
+ double qinf = 4;
+#define sh sh_nap
+ double sh = 15;
+#define thinf thinf_nap
+ double thinf = -50;
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
  0,0,0
 };
  static HocParmUnits _hoc_parm_units[] = {
- "gmn_kdr", "1",
- "nmax_kdr", "1",
- "gkdrbar_kdr", "mho/cm2",
- "vhalfn_kdr", "mV",
- "a0n_kdr", "/ms",
- "zetan_kdr", "1",
+ "sh_nap", "mV",
+ "Ra_nap", "/ms",
+ "Rb_nap", "/ms",
+ "Rg_nap", "/ms",
+ "Rd_nap", "/ms",
+ "thinf_nap", "mV",
+ "qinf_nap", "mV",
+ "mtau_nap", "ms",
+ "htau_nap", "ms",
+ "gbar_nap", "mho/cm2",
+ "tha_nap", "mV",
+ "qa_nap", "mV",
+ "thi1_nap", "mV",
+ "thi2_nap", "mV",
+ "qd_nap", "mV",
+ "qg_nap", "mV",
  0,0
 };
  static double delta_t = 0.01;
- static double n0 = 0;
+ static double h0 = 0;
+ static double m0 = 0;
  static double v = 0;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "gmn_kdr", &gmn_kdr,
- "nmax_kdr", &nmax_kdr,
- "q10_kdr", &q10_kdr,
- "ninf_kdr", &ninf_kdr,
- "taun_kdr", &taun_kdr,
+ "sh_nap", &sh_nap,
+ "Ra_nap", &Ra_nap,
+ "Rb_nap", &Rb_nap,
+ "mmin_nap", &mmin_nap,
+ "hmin_nap", &hmin_nap,
+ "q10_nap", &q10_nap,
+ "Rg_nap", &Rg_nap,
+ "Rd_nap", &Rd_nap,
+ "thinf_nap", &thinf_nap,
+ "qinf_nap", &qinf_nap,
+ "minf_nap", &minf_nap,
+ "hinf_nap", &hinf_nap,
+ "mtau_nap", &mtau_nap,
+ "htau_nap", &htau_nap,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -163,40 +202,46 @@ static void _ode_matsol(_NrnThread*, _Memb_list*, int);
  /* connect range variables in _p that hoc is supposed to know about */
  static const char *_mechanism[] = {
  "6.2.0",
-"kdr",
- "gkdrbar_kdr",
- "vhalfn_kdr",
- "a0n_kdr",
- "zetan_kdr",
+"nap",
+ "gbar_nap",
+ "tha_nap",
+ "qa_nap",
+ "thi1_nap",
+ "thi2_nap",
+ "qd_nap",
+ "qg_nap",
  0,
- "gkdr_kdr",
  0,
- "n_kdr",
+ "m_nap",
+ "h_nap",
  0,
  0};
- static Symbol* _k_sym;
+ static Symbol* _na_sym;
  
 extern Prop* need_memb(Symbol*);
 
 static void nrn_alloc(Prop* _prop) {
 	Prop *prop_ion;
 	double *_p; Datum *_ppvar;
- 	_p = nrn_prop_data_alloc(_mechtype, 10, _prop);
+ 	_p = nrn_prop_data_alloc(_mechtype, 15, _prop);
  	/*initialize range parameters*/
- 	gkdrbar = 0.003;
- 	vhalfn = 13;
- 	a0n = 0.02;
- 	zetan = -3;
+ 	gbar = 0.01;
+ 	tha = -30;
+ 	qa = 7.2;
+ 	thi1 = -45;
+ 	thi2 = -45;
+ 	qd = 1.5;
+ 	qg = 1.5;
  	_prop->param = _p;
- 	_prop->param_size = 10;
+ 	_prop->param_size = 15;
  	_ppvar = nrn_prop_datum_alloc(_mechtype, 4, _prop);
  	_prop->dparam = _ppvar;
  	/*connect ionic variables to this model*/
- prop_ion = need_memb(_k_sym);
+ prop_ion = need_memb(_na_sym);
  nrn_promote(prop_ion, 0, 1);
- 	_ppvar[0]._pval = &prop_ion->param[0]; /* ek */
- 	_ppvar[1]._pval = &prop_ion->param[3]; /* ik */
- 	_ppvar[2]._pval = &prop_ion->param[4]; /* _ion_dikdv */
+ 	_ppvar[0]._pval = &prop_ion->param[0]; /* ena */
+ 	_ppvar[1]._pval = &prop_ion->param[3]; /* ina */
+ 	_ppvar[2]._pval = &prop_ion->param[4]; /* _ion_dinadv */
  
 }
  static void _initlists();
@@ -212,104 +257,97 @@ extern void _nrn_thread_table_reg(int, void(*)(double*, Datum*, Datum*, _NrnThre
 extern void hoc_register_tolerance(int, HocStateTolerance*, Symbol***);
 extern void _cvode_abstol( Symbol**, double*, int);
 
- void _kdrca1_reg() {
+ void _nap_reg() {
 	int _vectorized = 0;
   _initlists();
- 	ion_reg("k", -10000.);
- 	_k_sym = hoc_lookup("k_ion");
+ 	ion_reg("na", -10000.);
+ 	_na_sym = hoc_lookup("na_ion");
  	register_mech(_mechanism, nrn_alloc,nrn_cur, nrn_jacob, nrn_state, nrn_init, hoc_nrnpointerindex, 0);
  _mechtype = nrn_get_mechtype(_mechanism[1]);
      _nrn_setdata_reg(_mechtype, _setdata);
      _nrn_thread_reg(_mechtype, 2, _update_ion_pointer);
-  hoc_register_prop_size(_mechtype, 10, 4);
-  hoc_register_dparam_semantics(_mechtype, 0, "k_ion");
-  hoc_register_dparam_semantics(_mechtype, 1, "k_ion");
-  hoc_register_dparam_semantics(_mechtype, 2, "k_ion");
+  hoc_register_prop_size(_mechtype, 15, 4);
+  hoc_register_dparam_semantics(_mechtype, 0, "na_ion");
+  hoc_register_dparam_semantics(_mechtype, 1, "na_ion");
+  hoc_register_dparam_semantics(_mechtype, 2, "na_ion");
   hoc_register_dparam_semantics(_mechtype, 3, "cvodeieq");
  	hoc_register_cvode(_mechtype, _ode_count, _ode_map, _ode_spec, _ode_matsol);
  	hoc_register_tolerance(_mechtype, _hoc_state_tol, &_atollist);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, hoc_intfunc);
- 	ivoc_help("help ?1 kdr /Users/markplitt/repos/CellCorePSets/x86_64/kdrca1.mod\n");
+ 	ivoc_help("help ?1 nap /Users/markplitt/repos/CellCorePSets/x86_64/nap.mod\n");
  hoc_register_limits(_mechtype, _hoc_parm_limits);
  hoc_register_units(_mechtype, _hoc_parm_units);
  }
 static int _reset;
-static char *modelname = "K-DR channel";
+static char *modelname = "nap";
 
 static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
-static int rates(double);
+static int trates(double);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
  static int _slist1[1], _dlist1[1];
  static int states(_threadargsproto_);
  
-double alpn (  double _lv ) {
-   double _lalpn;
- _lalpn = exp ( 1.e-3 * zetan * ( _lv - vhalfn ) * 9.648e4 / ( 8.315 * ( 273.16 + celsius ) ) ) ;
-   
-return _lalpn;
- }
- 
-static void _hoc_alpn(void) {
-  double _r;
-   _r =  alpn (  *getarg(1) );
- hoc_retpushx(_r);
-}
- 
-double betn (  double _lv ) {
-   double _lbetn;
- _lbetn = exp ( 1.e-3 * zetan * gmn * ( _lv - vhalfn ) * 9.648e4 / ( 8.315 * ( 273.16 + celsius ) ) ) ;
-   
-return _lbetn;
- }
- 
-static void _hoc_betn(void) {
-  double _r;
-   _r =  betn (  *getarg(1) );
- hoc_retpushx(_r);
-}
- 
 /*CVODE*/
  static int _ode_spec1 () {_reset=0;
  {
-   rates ( _threadargscomma_ v ) ;
-   Dn = ( ninf - n ) / taun ;
+   trates ( _threadargscomma_ v ) ;
+   Dm = ( minf - m ) / mtau ;
    }
  return _reset;
 }
  static int _ode_matsol1 () {
- rates ( _threadargscomma_ v ) ;
- Dn = Dn  / (1. - dt*( ( ( ( - 1.0 ) ) ) / taun )) ;
+ trates ( _threadargscomma_ v ) ;
+ Dm = Dm  / (1. - dt*( ( ( ( - 1.0 ) ) ) / mtau )) ;
  return 0;
 }
  /*END CVODE*/
  static int states () {_reset=0;
  {
-   rates ( _threadargscomma_ v ) ;
-    n = n + (1. - exp(dt*(( ( ( - 1.0 ) ) ) / taun)))*(- ( ( ( ninf ) ) / taun ) / ( ( ( ( - 1.0 ) ) ) / taun ) - n) ;
+   trates ( _threadargscomma_ v ) ;
+    m = m + (1. - exp(dt*(( ( ( - 1.0 ) ) ) / mtau)))*(- ( ( ( minf ) ) / mtau ) / ( ( ( ( - 1.0 ) ) ) / mtau ) - m) ;
    }
   return 0;
 }
  
-static int  rates (  double _lv ) {
-   double _la , _lqt ;
+static int  trates (  double _lvm ) {
+   double _la , _lb , _lqt ;
  _lqt = pow( q10 , ( ( celsius - 24.0 ) / 10.0 ) ) ;
-   _la = alpn ( _threadargscomma_ _lv ) ;
-   ninf = 1.0 / ( 1.0 + _la ) ;
-   taun = betn ( _threadargscomma_ _lv ) / ( _lqt * a0n * ( 1.0 + _la ) ) ;
-   if ( taun < nmax ) {
-     taun = nmax ;
+   _la = trap0 ( _threadargscomma_ _lvm , tha + sh , Ra , qa ) ;
+   _lb = trap0 ( _threadargscomma_ - _lvm , - tha - sh , Rb , qa ) ;
+   mtau = 1.0 / ( _la + _lb ) / _lqt ;
+   if ( mtau < mmin ) {
+     mtau = mmin ;
      }
+   minf = _la / ( _la + _lb ) ;
     return 0; }
  
-static void _hoc_rates(void) {
+static void _hoc_trates(void) {
   double _r;
    _r = 1.;
- rates (  *getarg(1) );
+ trates (  *getarg(1) );
+ hoc_retpushx(_r);
+}
+ 
+double trap0 (  double _lv , double _lth , double _la , double _lq ) {
+   double _ltrap0;
+ if ( fabs ( _lv - _lth ) > 1e-6 ) {
+     _ltrap0 = _la * ( _lv - _lth ) / ( 1.0 - exp ( - ( _lv - _lth ) / _lq ) ) ;
+     }
+   else {
+     _ltrap0 = _la * _lq ;
+     }
+   
+return _ltrap0;
+ }
+ 
+static void _hoc_trap0(void) {
+  double _r;
+   _r =  trap0 (  *getarg(1) , *getarg(2) , *getarg(3) , *getarg(4) );
  hoc_retpushx(_r);
 }
  
@@ -324,7 +362,7 @@ static void _ode_spec(_NrnThread* _nt, _Memb_list* _ml, int _type) {
     _p = _ml->_data[_iml]; _ppvar = _ml->_pdata[_iml];
     _nd = _ml->_nodelist[_iml];
     v = NODEV(_nd);
-  ek = _ion_ek;
+  ena = _ion_ena;
      _ode_spec1 ();
   }}
  
@@ -350,14 +388,14 @@ static void _ode_matsol(_NrnThread* _nt, _Memb_list* _ml, int _type) {
     _p = _ml->_data[_iml]; _ppvar = _ml->_pdata[_iml];
     _nd = _ml->_nodelist[_iml];
     v = NODEV(_nd);
-  ek = _ion_ek;
+  ena = _ion_ena;
  _ode_matsol_instance1(_threadargs_);
  }}
  extern void nrn_update_ion_pointer(Symbol*, Datum*, int, int);
  static void _update_ion_pointer(Datum* _ppvar) {
-   nrn_update_ion_pointer(_k_sym, _ppvar, 0, 0);
-   nrn_update_ion_pointer(_k_sym, _ppvar, 1, 3);
-   nrn_update_ion_pointer(_k_sym, _ppvar, 2, 4);
+   nrn_update_ion_pointer(_na_sym, _ppvar, 0, 0);
+   nrn_update_ion_pointer(_na_sym, _ppvar, 1, 3);
+   nrn_update_ion_pointer(_na_sym, _ppvar, 2, 4);
  }
 
 static void initmodel() {
@@ -365,10 +403,12 @@ static void initmodel() {
  _save = t;
  t = 0.0;
 {
-  n = n0;
+  h = h0;
+  m = m0;
  {
-   rates ( _threadargscomma_ v ) ;
-   n = ninf ;
+   trates ( _threadargscomma_ v ) ;
+   m = minf ;
+   h = hinf ;
    }
   _sav_indep = t; t = _save;
 
@@ -393,15 +433,15 @@ for (_iml = 0; _iml < _cntml; ++_iml) {
     _v = NODEV(_nd);
   }
  v = _v;
-  ek = _ion_ek;
+  ena = _ion_ena;
  initmodel();
  }}
 
 static double _nrn_current(double _v){double _current=0.;v=_v;{ {
-   gkdr = gkdrbar * n ;
-   ik = gkdr * ( v - ek ) ;
+   thegna = gbar * m * m * m ;
+   ina = thegna * ( v - ena ) ;
    }
- _current += ik;
+ _current += ina;
 
 } return _current;
 }
@@ -423,15 +463,15 @@ for (_iml = 0; _iml < _cntml; ++_iml) {
     _nd = _ml->_nodelist[_iml];
     _v = NODEV(_nd);
   }
-  ek = _ion_ek;
+  ena = _ion_ena;
  _g = _nrn_current(_v + .001);
- 	{ double _dik;
-  _dik = ik;
+ 	{ double _dina;
+  _dina = ina;
  _rhs = _nrn_current(_v);
-  _ion_dikdv += (_dik - ik)/.001 ;
+  _ion_dinadv += (_dina - ina)/.001 ;
  	}
  _g = (_g - _rhs)/.001;
-  _ion_ik += ik ;
+  _ion_ina += ina ;
 #if CACHEVEC
   if (use_cachevec) {
 	VEC_RHS(_ni[_iml]) -= _rhs;
@@ -483,9 +523,9 @@ for (_iml = 0; _iml < _cntml; ++_iml) {
   }
  v=_v;
 {
-  ek = _ion_ek;
+  ena = _ion_ena;
  { error =  states();
- if(error){fprintf(stderr,"at line 45 in file kdrca1.mod:\n	SOLVE states METHOD cnexp\n"); nrn_complain(_p); abort_run(error);}
+ if(error){fprintf(stderr,"at line 59 in file nap.mod:\n        SOLVE states METHOD cnexp\n"); nrn_complain(_p); abort_run(error);}
  } }}
 
 }
@@ -495,6 +535,6 @@ static void terminal(){}
 static void _initlists() {
  int _i; static int _first = 1;
   if (!_first) return;
- _slist1[0] = &(n) - _p;  _dlist1[0] = &(Dn) - _p;
+ _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
 _first = 0;
 }

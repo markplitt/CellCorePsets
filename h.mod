@@ -9,15 +9,15 @@ UNITS {
 
 PARAMETER {
 	v 		(mV)
-        ehd  		(mV)        
+  ehd  		(mV)
 	celsius 	(degC)
 	ghdbar=.0001 	(mho/cm2)
-        vhalfl=-90   	(mV)
-        vhalft=-75   	(mV)
-        a0t=0.011      	(/ms)
-        zetal=4    	(1)
-        zetat=2.2    	(1)
-        gmt=.4   	(1)
+  vhalfl=-90   	(mV)
+  vhalft=-75   	(mV)
+	a0t=0.011      	(/ms)
+  zetal=4    	(1)
+  zetat=2.2    	(1)
+  gmt=.4   	(1)
 	q10=4.5
 	qtl=1
 }
@@ -26,7 +26,7 @@ PARAMETER {
 NEURON {
 	SUFFIX hd
 	NONSPECIFIC_CURRENT i
-        RANGE ghdbar, vhalfl
+  RANGE ghdbar, vhalfl, vhalft, a0t, zetal, zetat
         GLOBAL linf,taul
 }
 
@@ -36,7 +36,7 @@ STATE {
 
 ASSIGNED {
 	i (mA/cm2)
-        linf      
+        linf
         taul
         ghd
 }
@@ -56,15 +56,15 @@ BREAKPOINT {
 
 
 FUNCTION alpl(v(mV)) {
-  alpl = exp(0.0378*zetal*(v-vhalfl)) 
+  alpl = exp(0.0378*zetal*(v-vhalfl))
 }
 
 FUNCTION alpt(v(mV)) {
-  alpt = exp(0.0378*zetat*(v-vhalft)) 
+  alpt = exp(0.0378*zetat*(v-vhalft))
 }
 
 FUNCTION bett(v(mV)) {
-  bett = exp(0.0378*zetat*gmt*(v-vhalft)) 
+  bett = exp(0.0378*zetat*gmt*(v-vhalft))
 }
 
 DERIVATIVE states {     : exact when v held constant; integrates over dt step
@@ -79,17 +79,3 @@ PROCEDURE rate(v (mV)) { :callable from hoc
         linf = 1/(1+ alpl(v))
         taul = bett(v)/(qtl*qt*a0t*(1+a))
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

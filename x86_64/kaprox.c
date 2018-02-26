@@ -46,14 +46,21 @@ extern double hoc_Exp(double);
 #define t nrn_threads->_t
 #define dt nrn_threads->_dt
 #define gkabar _p[0]
-#define gka _p[1]
-#define n _p[2]
-#define l _p[3]
-#define ek _p[4]
-#define Dn _p[5]
-#define Dl _p[6]
-#define ik _p[7]
-#define _g _p[8]
+#define vhalfn _p[1]
+#define vhalfl _p[2]
+#define a0l _p[3]
+#define a0n _p[4]
+#define zetan _p[5]
+#define zetal _p[6]
+#define qtl _p[7]
+#define gka _p[8]
+#define n _p[9]
+#define l _p[10]
+#define ek _p[11]
+#define Dn _p[12]
+#define Dl _p[13]
+#define ik _p[14]
+#define _g _p[15]
 #define _ion_ek	*_ppvar[0]._pval
 #define _ion_ik	*_ppvar[1]._pval
 #define _ion_dikdv	*_ppvar[2]._pval
@@ -115,10 +122,6 @@ extern Memb_func* memb_func;
  extern double betl( double );
  extern double betn( double );
  /* declare global and static user variables */
-#define a0n a0n_kap
- double a0n = 0.05;
-#define a0l a0l_kap
- double a0l = 0.05;
 #define gml gml_kap
  double gml = 1;
 #define gmn gmn_kap
@@ -133,8 +136,6 @@ extern Memb_func* memb_func;
  double nmin = 0.1;
 #define pw pw_kap
  double pw = -1;
-#define qtl qtl_kap
- double qtl = 1;
 #define q10 q10_kap
  double q10 = 5;
 #define qq qq_kap
@@ -145,31 +146,24 @@ extern Memb_func* memb_func;
  double taul = 0;
 #define tq tq_kap
  double tq = -40;
-#define vhalfl vhalfl_kap
- double vhalfl = -56;
-#define vhalfn vhalfn_kap
- double vhalfn = 11;
-#define zetal zetal_kap
- double zetal = 3;
-#define zetan zetan_kap
- double zetan = -1.5;
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
  0,0,0
 };
  static HocParmUnits _hoc_parm_units[] = {
- "vhalfn_kap", "mV",
- "vhalfl_kap", "mV",
- "a0l_kap", "/ms",
- "a0n_kap", "/ms",
- "zetan_kap", "1",
- "zetal_kap", "1",
  "gmn_kap", "1",
  "gml_kap", "1",
  "lmin_kap", "mS",
  "nmin_kap", "mS",
  "pw_kap", "1",
  "gkabar_kap", "mho/cm2",
+ "vhalfn_kap", "mV",
+ "vhalfl_kap", "mV",
+ "a0l_kap", "/ms",
+ "a0n_kap", "/ms",
+ "zetan_kap", "1",
+ "zetal_kap", "1",
+ "qtl_kap", "1",
  0,0
 };
  static double delta_t = 0.01;
@@ -178,12 +172,6 @@ extern Memb_func* memb_func;
  static double v = 0;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "vhalfn_kap", &vhalfn_kap,
- "vhalfl_kap", &vhalfl_kap,
- "a0l_kap", &a0l_kap,
- "a0n_kap", &a0n_kap,
- "zetan_kap", &zetan_kap,
- "zetal_kap", &zetal_kap,
  "gmn_kap", &gmn_kap,
  "gml_kap", &gml_kap,
  "lmin_kap", &lmin_kap,
@@ -192,7 +180,6 @@ extern Memb_func* memb_func;
  "tq_kap", &tq_kap,
  "qq_kap", &qq_kap,
  "q10_kap", &q10_kap,
- "qtl_kap", &qtl_kap,
  "ninf_kap", &ninf_kap,
  "linf_kap", &linf_kap,
  "taul_kap", &taul_kap,
@@ -221,6 +208,13 @@ static void _ode_matsol(_NrnThread*, _Memb_list*, int);
  "6.2.0",
 "kap",
  "gkabar_kap",
+ "vhalfn_kap",
+ "vhalfl_kap",
+ "a0l_kap",
+ "a0n_kap",
+ "zetan_kap",
+ "zetal_kap",
+ "qtl_kap",
  0,
  "gka_kap",
  0,
@@ -235,11 +229,18 @@ extern Prop* need_memb(Symbol*);
 static void nrn_alloc(Prop* _prop) {
 	Prop *prop_ion;
 	double *_p; Datum *_ppvar;
- 	_p = nrn_prop_data_alloc(_mechtype, 9, _prop);
+ 	_p = nrn_prop_data_alloc(_mechtype, 16, _prop);
  	/*initialize range parameters*/
  	gkabar = 0.008;
+ 	vhalfn = 11;
+ 	vhalfl = -56;
+ 	a0l = 0.05;
+ 	a0n = 0.05;
+ 	zetan = -1.5;
+ 	zetal = 3;
+ 	qtl = 1;
  	_prop->param = _p;
- 	_prop->param_size = 9;
+ 	_prop->param_size = 16;
  	_ppvar = nrn_prop_datum_alloc(_mechtype, 4, _prop);
  	_prop->dparam = _ppvar;
  	/*connect ionic variables to this model*/
@@ -272,7 +273,7 @@ extern void _cvode_abstol( Symbol**, double*, int);
  _mechtype = nrn_get_mechtype(_mechanism[1]);
      _nrn_setdata_reg(_mechtype, _setdata);
      _nrn_thread_reg(_mechtype, 2, _update_ion_pointer);
-  hoc_register_prop_size(_mechtype, 9, 4);
+  hoc_register_prop_size(_mechtype, 16, 4);
   hoc_register_dparam_semantics(_mechtype, 0, "k_ion");
   hoc_register_dparam_semantics(_mechtype, 1, "k_ion");
   hoc_register_dparam_semantics(_mechtype, 2, "k_ion");
@@ -280,7 +281,7 @@ extern void _cvode_abstol( Symbol**, double*, int);
  	hoc_register_cvode(_mechtype, _ode_count, _ode_map, _ode_spec, _ode_matsol);
  	hoc_register_tolerance(_mechtype, _hoc_state_tol, &_atollist);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, hoc_intfunc);
- 	ivoc_help("help ?1 kap /Users/markplitt/repos/CellCorePSets/CA1_burster/x86_64/kaprox.mod\n");
+ 	ivoc_help("help ?1 kap /Users/markplitt/repos/CellCorePSets/x86_64/kaprox.mod\n");
  hoc_register_limits(_mechtype, _hoc_parm_limits);
  hoc_register_units(_mechtype, _hoc_parm_units);
  }
@@ -390,7 +391,7 @@ static int  rates (  double _lv ) {
      }
    _la = alpl ( _threadargscomma_ _lv ) ;
    linf = 1.0 / ( 1.0 + _la ) ;
-   taul = 0.26 * ( _lv + 50.0 ) / qtl ;
+   taul = 0.26 * ( _lv + 50.0 ) / qtl / a0l ;
    if ( taul < lmin / qtl ) {
      taul = lmin / qtl ;
      }
@@ -577,7 +578,7 @@ for (_iml = 0; _iml < _cntml; ++_iml) {
 {
   ek = _ion_ek;
  { error =  states();
- if(error){fprintf(stderr,"at line 63 in file kaprox.mod:\n	SOLVE states METHOD cnexp\n"); nrn_complain(_p); abort_run(error);}
+ if(error){fprintf(stderr,"at line 64 in file kaprox.mod:\n	SOLVE states METHOD cnexp\n"); nrn_complain(_p); abort_run(error);}
  } }}
 
 }

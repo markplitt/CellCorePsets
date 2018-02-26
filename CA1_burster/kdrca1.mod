@@ -14,10 +14,10 @@ PARAMETER {
         ek (mV)		: must be explicitely def. in hoc
 	celsius		(degC)
 	gkdrbar=.003 (mho/cm2)
-        vhalfn=13   (mV)
-        a0n=0.02      (/ms)
-        zetan=-3    (1)
-        gmn=0.7  (1)
+  vhalfn=13   (mV)
+	a0n=0.02      (/ms)
+  zetan=-3    (1)
+  gmn=0.7  (1)
 	nmax=2  (1)
 	q10=1
 }
@@ -55,11 +55,11 @@ INITIAL {
 
 
 FUNCTION alpn(v(mV)) {
-  alpn = exp(1.e-3*zetan*(v-vhalfn)*9.648e4/(8.315*(273.16+celsius))) 
+  alpn = exp(1.e-3*zetan*(v-vhalfn)*9.648e4/(8.315*(273.16+celsius)))
 }
 
 FUNCTION betn(v(mV)) {
-  betn = exp(1.e-3*zetan*gmn*(v-vhalfn)*9.648e4/(8.315*(273.16+celsius))) 
+  betn = exp(1.e-3*zetan*gmn*(v-vhalfn)*9.648e4/(8.315*(273.16+celsius)))
 }
 
 DERIVATIVE states {     : exact when v held constant; integrates over dt step
@@ -75,17 +75,3 @@ PROCEDURE rates(v (mV)) { :callable from hoc
         taun = betn(v)/(qt*a0n*(1+a))
 	if (taun<nmax) {taun=nmax}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

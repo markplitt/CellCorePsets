@@ -1,10 +1,10 @@
-TITLE na3
+TITLE nap
 : Na current for axon. No slow inact.
 : M.Migliore Jul. 1997
 : added sh to account for higher threshold M.Migliore, Apr.2002
 
 NEURON {
-	SUFFIX nax
+	SUFFIX nap
 	USEION na READ ena WRITE ina
 	RANGE  gbar, tha, thi1, thi2, qa, qd, qg, a0m, a0h
 	GLOBAL minf, hinf, mtau, htau,thinf, qinf
@@ -57,7 +57,7 @@ STATE { m h}
 
 BREAKPOINT {
         SOLVE states METHOD cnexp
-        thegna = gbar*m*m*m*h
+        thegna = gbar*m*m*m
 	ina = thegna * (v - ena)
 }
 
@@ -70,7 +70,7 @@ INITIAL {
 DERIVATIVE states {
         trates(v)
         m' = (minf-m)/mtau
-        h' = (hinf-h)/htau
+
 }
 
 PROCEDURE trates(vm) {
@@ -82,11 +82,6 @@ PROCEDURE trates(vm) {
         if (mtau<mmin) {mtau=mmin}
 	minf = a/(a+b)
 
-	a = trap0(vm,thi1+sh,Rd,qd)
-	b = trap0(-vm,-thi2-sh,Rg,qg)
-	htau =  1/(a+b)/qt
-        if (htau<hmin) {htau=hmin}
-	hinf = 1/(1+exp((vm-thinf-sh)/qinf))
 }
 
 FUNCTION trap0(v,th,a,q) {

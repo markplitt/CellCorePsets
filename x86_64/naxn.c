@@ -46,14 +46,22 @@ extern double hoc_Exp(double);
 #define t nrn_threads->_t
 #define dt nrn_threads->_dt
 #define gbar _p[0]
-#define m _p[1]
-#define h _p[2]
-#define ena _p[3]
-#define ina _p[4]
-#define thegna _p[5]
-#define Dm _p[6]
-#define Dh _p[7]
-#define _g _p[8]
+#define tha _p[1]
+#define qa _p[2]
+#define thi1 _p[3]
+#define thi2 _p[4]
+#define qd _p[5]
+#define qg _p[6]
+#define a0m _p[7]
+#define a0h _p[8]
+#define m _p[9]
+#define h _p[10]
+#define ena _p[11]
+#define ina _p[12]
+#define thegna _p[13]
+#define Dm _p[14]
+#define Dh _p[15]
+#define _g _p[16]
 #define _ion_ena	*_ppvar[0]._pval
 #define _ion_ina	*_ppvar[1]._pval
 #define _ion_dinadv	*_ppvar[2]._pval
@@ -125,22 +133,10 @@ extern Memb_func* memb_func;
  double minf = 0;
 #define q10 q10_nax
  double q10 = 2;
-#define qg qg_nax
- double qg = 1.5;
-#define qd qd_nax
- double qd = 1.5;
-#define qa qa_nax
- double qa = 7.2;
 #define qinf qinf_nax
  double qinf = 4;
 #define sh sh_nax
  double sh = 15;
-#define thi2 thi2_nax
- double thi2 = -45;
-#define thi1 thi1_nax
- double thi1 = -45;
-#define tha tha_nax
- double tha = -30;
 #define thinf thinf_nax
  double thinf = -50;
  /* some parameters have upper and lower limits */
@@ -149,14 +145,8 @@ extern Memb_func* memb_func;
 };
  static HocParmUnits _hoc_parm_units[] = {
  "sh_nax", "mV",
- "tha_nax", "mV",
- "qa_nax", "mV",
  "Ra_nax", "/ms",
  "Rb_nax", "/ms",
- "thi1_nax", "mV",
- "thi2_nax", "mV",
- "qd_nax", "mV",
- "qg_nax", "mV",
  "Rg_nax", "/ms",
  "Rd_nax", "/ms",
  "thinf_nax", "mV",
@@ -164,6 +154,12 @@ extern Memb_func* memb_func;
  "mtau_nax", "ms",
  "htau_nax", "ms",
  "gbar_nax", "mho/cm2",
+ "tha_nax", "mV",
+ "qa_nax", "mV",
+ "thi1_nax", "mV",
+ "thi2_nax", "mV",
+ "qd_nax", "mV",
+ "qg_nax", "mV",
  0,0
 };
  static double delta_t = 0.01;
@@ -173,14 +169,8 @@ extern Memb_func* memb_func;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
  "sh_nax", &sh_nax,
- "tha_nax", &tha_nax,
- "qa_nax", &qa_nax,
  "Ra_nax", &Ra_nax,
  "Rb_nax", &Rb_nax,
- "thi1_nax", &thi1_nax,
- "thi2_nax", &thi2_nax,
- "qd_nax", &qd_nax,
- "qg_nax", &qg_nax,
  "mmin_nax", &mmin_nax,
  "hmin_nax", &hmin_nax,
  "q10_nax", &q10_nax,
@@ -216,6 +206,14 @@ static void _ode_matsol(_NrnThread*, _Memb_list*, int);
  "6.2.0",
 "nax",
  "gbar_nax",
+ "tha_nax",
+ "qa_nax",
+ "thi1_nax",
+ "thi2_nax",
+ "qd_nax",
+ "qg_nax",
+ "a0m_nax",
+ "a0h_nax",
  0,
  0,
  "m_nax",
@@ -229,11 +227,19 @@ extern Prop* need_memb(Symbol*);
 static void nrn_alloc(Prop* _prop) {
 	Prop *prop_ion;
 	double *_p; Datum *_ppvar;
- 	_p = nrn_prop_data_alloc(_mechtype, 9, _prop);
+ 	_p = nrn_prop_data_alloc(_mechtype, 17, _prop);
  	/*initialize range parameters*/
  	gbar = 0.01;
+ 	tha = -30;
+ 	qa = 7.2;
+ 	thi1 = -45;
+ 	thi2 = -45;
+ 	qd = 1.5;
+ 	qg = 1.5;
+ 	a0m = 1;
+ 	a0h = 1;
  	_prop->param = _p;
- 	_prop->param_size = 9;
+ 	_prop->param_size = 17;
  	_ppvar = nrn_prop_datum_alloc(_mechtype, 4, _prop);
  	_prop->dparam = _ppvar;
  	/*connect ionic variables to this model*/
@@ -266,7 +272,7 @@ extern void _cvode_abstol( Symbol**, double*, int);
  _mechtype = nrn_get_mechtype(_mechanism[1]);
      _nrn_setdata_reg(_mechtype, _setdata);
      _nrn_thread_reg(_mechtype, 2, _update_ion_pointer);
-  hoc_register_prop_size(_mechtype, 9, 4);
+  hoc_register_prop_size(_mechtype, 17, 4);
   hoc_register_dparam_semantics(_mechtype, 0, "na_ion");
   hoc_register_dparam_semantics(_mechtype, 1, "na_ion");
   hoc_register_dparam_semantics(_mechtype, 2, "na_ion");
@@ -274,7 +280,7 @@ extern void _cvode_abstol( Symbol**, double*, int);
  	hoc_register_cvode(_mechtype, _ode_count, _ode_map, _ode_spec, _ode_matsol);
  	hoc_register_tolerance(_mechtype, _hoc_state_tol, &_atollist);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, hoc_intfunc);
- 	ivoc_help("help ?1 nax /Users/markplitt/repos/CellCorePSets/CA1_burster/x86_64/naxn.mod\n");
+ 	ivoc_help("help ?1 nax /Users/markplitt/repos/CellCorePSets/x86_64/naxn.mod\n");
  hoc_register_limits(_mechtype, _hoc_parm_limits);
  hoc_register_units(_mechtype, _hoc_parm_units);
  }
@@ -322,14 +328,14 @@ static int  trates (  double _lvm ) {
  _lqt = pow( q10 , ( ( celsius - 24.0 ) / 10.0 ) ) ;
    _la = trap0 ( _threadargscomma_ _lvm , tha + sh , Ra , qa ) ;
    _lb = trap0 ( _threadargscomma_ - _lvm , - tha - sh , Rb , qa ) ;
-   mtau = 1.0 / ( _la + _lb ) / _lqt ;
+   mtau = 1.0 / ( _la + _lb ) / _lqt / a0m ;
    if ( mtau < mmin ) {
      mtau = mmin ;
      }
    minf = _la / ( _la + _lb ) ;
    _la = trap0 ( _threadargscomma_ _lvm , thi1 + sh , Rd , qd ) ;
    _lb = trap0 ( _threadargscomma_ - _lvm , - thi2 - sh , Rg , qg ) ;
-   htau = 1.0 / ( _la + _lb ) / _lqt ;
+   htau = 1.0 / ( _la + _lb ) / _lqt / a0h ;
    if ( htau < hmin ) {
      htau = hmin ;
      }
@@ -535,7 +541,7 @@ for (_iml = 0; _iml < _cntml; ++_iml) {
 {
   ena = _ion_ena;
  { error =  states();
- if(error){fprintf(stderr,"at line 59 in file naxn.mod:\n        SOLVE states METHOD cnexp\n"); nrn_complain(_p); abort_run(error);}
+ if(error){fprintf(stderr,"at line 62 in file naxn.mod:\n        SOLVE states METHOD cnexp\n"); nrn_complain(_p); abort_run(error);}
  } }}
 
 }
