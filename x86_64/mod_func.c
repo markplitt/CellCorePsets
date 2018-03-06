@@ -3,6 +3,8 @@
 extern int nrnmpi_myid;
 extern int nrn_nobanner_;
 
+extern void _Gfluct2_reg(void);
+extern void _IClampNoise_reg(void);
 extern void _h_reg(void);
 extern void _kadist_reg(void);
 extern void _kaprox_reg(void);
@@ -16,6 +18,8 @@ void modl_reg(){
   if (!nrn_nobanner_) if (nrnmpi_myid < 1) {
     fprintf(stderr, "Additional mechanisms from files\n");
 
+    fprintf(stderr," Gfluct2.mod");
+    fprintf(stderr," IClampNoise.mod");
     fprintf(stderr," h.mod");
     fprintf(stderr," kadist.mod");
     fprintf(stderr," kaprox.mod");
@@ -26,6 +30,8 @@ void modl_reg(){
     fprintf(stderr," netstimm.mod");
     fprintf(stderr, "\n");
   }
+  _Gfluct2_reg();
+  _IClampNoise_reg();
   _h_reg();
   _kadist_reg();
   _kaprox_reg();

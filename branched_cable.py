@@ -29,9 +29,11 @@ class branched_cable(object):
 
 
 
-    def add_branch(self,seg,pos,L,diam,segname='branch',cm = 1, Ra = 150,Rm = 2800, Vrest = -65.):
+    def add_branch(self,seg,pos,L,diam,segname='branch',cm = 1, Ra = 150,Rm = 2800,
+        Vrest = -65.,nseg=None):
         '''add a branch to seg at pos with specified distributed properites'''
-        self.make_cable(L,diam,segname=segname,cm = cm, Ra = Ra,Rm = Rm, Vrest = Vrest)
+        self.make_cable(L,diam,segname=segname,cm = cm, Ra = Ra,Rm = Rm, Vrest = Vrest,
+            nseg=nseg)
         self.segments[segname].connect(self.segments[seg](pos))
         #self.segments[segname]
 
@@ -46,22 +48,22 @@ class branched_cable(object):
         iclamp.delay = delay
         self.stims[stimname]=iclamp
 
-    def add_stim(self,seg,pos):
+    def add_stim(self,seg,pos,weight=1,tau = .1,delay=80,stimname='alpha_syn'):
         '''add a synapse on cell compartment seg at position pos (0 to 1: percent down the process)
 
         Not fully functional yet'''
         stim = h.NetStim() # Make a new stimulator
-
-        # Attach it to a synapse in the middle of the dendrite
-        # of the first cell in the network. (Named 'syn_' to avoid
-        # being overwritten with the 'syn' var assigned later.)
-        syn_ = h.ExpSyn(self.segments[seg](pos), name='syn_')
-
-        stim.number = 1
-        stim.start = 9
+        syn_ = h.ExpSyn(self.segments[seg](pos))
+        syn_.e = 0
+        syn_.tau = 1
+        stim.number = 10
+        stim.interval=.1
+        stim.start = 80
         ncstim = h.NetCon(stim, syn_)
         ncstim.delay = 1
-        ncstim.weight[0] = 0.04 # NetCon weight is a vector.
+        ncstim.weight[0] = .04 # NetCon weight is a vector.
+        #cell.stims['expsyn']=ncstimn weight is a vector.
+        self.stims[stimname]=ncstim
 
     def recording_vecs(self,locations):
         ''' add NEURON vectors to record desired parameters specified by list of lists locations
@@ -175,6 +177,26 @@ class branched_cable(object):
             # volatage dependence
 
 
+    def noise_source(self,seg,pos, E_e=0, E_i=-75, g_e0=0.0121,
+        g_i0=0.0573,std_e=0.0030, std_i=0.0066,
+        tau_e=2.728,tau_i=10.49,stimname = 'noise'):
+
+
+        syn_noise = h.Gfluct2(self.segments[seg](pos))
+        syn_noise.E_e=E_e
+        syn_noise.E_i =E_i
+        syn_noise.g_e0 =g_e0
+        syn_noise.g_i0 =g_i0
+        syn_noise.std_e =std_e
+        syn_noise.std_i =std_i
+        syn_noise.tau_e =tau_e
+
+        self.stims[stimname]=syn_noise
+        # noise = h.IClampNoise(self.segments[seg](pos))
+        # noise.f0=1
+        # noise.std=1
+
+
 def run_current_clamp(cell,stimname,stimVals,tstop = 130):
 
     results = {}
@@ -190,5 +212,21 @@ def run_current_clamp(cell,stimname,stimVals,tstop = 130):
 
         for key in cell.record_vecs.keys():
             results[key][:,i] = cell.record_vecs[key].as_numpy()
+
+    return t, results
+
+def run_sim(cell,tstop=130):
+    results = {}
+
+    h.tstop=tstop
+    h.run()
+
+
+    t = cell.record_vecs['time'].as_numpy()
+    for key in cell.record_vecs.keys():
+        results[key] = np.zeros([t.shape[0],])
+
+    for key in cell.record_vecs.keys():
+        results[key][:] = cell.record_vecs[key].as_numpy()
 
     return t, results
