@@ -19,6 +19,8 @@ class branched_cable(object):
 
         if nseg is None: # use d_lambda rule to get good guess of best number of segments
             cable.nseg = int(L) #50*(int((L/(0.1*h.lambda_f(100))+.999)/2.)*2 + 1)
+        elif nseg is "d_lambda":
+            cable.nseg=int((L/(0.1*h.lambda_f(100))+.999)/2.)*2 + 1
         else:
             cable.nseg = nseg
 
